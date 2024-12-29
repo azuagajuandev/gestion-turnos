@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h2>Reserva de Turnos</h2>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.nombre_cliente.label }}
+            {{ form.nombre_cliente(class="form-control") }}
+        </div>
+        <div>
+            {{ form.email_cliente.label }}
+            {{ form.email_cliente(class="form-control") }}
+        </div>
+        <div>
+            {{ form.fecha_turno.label }}
+            {{ form.fecha_turno(class="form-control") }}
+        </div>
+        <div>
+            {{ form.submit(class="btn btn-primary") }}
+        </div>
+    </form>
+
+{% endblock %}

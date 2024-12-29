@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h2>Turnos</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div>
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+            {{ message }}
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Email</th>
+                <th>Fecha</th>
+                <th>Pagado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for turno in turnos %}
+            <tr>
+                <td>{{ turno.id }}</td>
+                <td>{{ turno.nombre_cliente }}</td>
+                <td>{{ turno.email_cliente }}</td>
+                <td>{{ turno.fecha_turno }}</td>
+                <td>{{ "Sí" if turno.pagado else "No" }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('cancelar_turno', id=turno.id) }}">
+                        <button type="submit" class="btn btn-danger">Cancelar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

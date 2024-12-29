@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h2>Turnos Disponibilidades</h2>
+    <ul>
+        {% for turno in turnos %}
+        <li>{{ turno.fecha }} - {{ turno.hora }}</li>
+        {% endif %}
+    </ul>
+
+{% endblock %}

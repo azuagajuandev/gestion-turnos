@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h2>Configuraciones</h2>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <div>{{ form.dias_no_laborales.label }}<br>{{ form.dias_no_laborales }}</div>
+        <div>{{ form.limite_turnos.label }}<br>{{ form.limite_turnos }}</div>
+        <div>{{ form.horario_inicio.label }}<br>{{ form.horario_inicio }}</div>
+        <div>{{ form.horario_fin.label }}<br>{{ form.horario_fin }}</div>
+        <div>{{ form.submit(class="btn btn-primary") }}</div>
+    </form>
+
+{% endblock %}

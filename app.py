@@ -1,7 +1,8 @@
 from flask import Flask, flash, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, DateTimeField, SubmitField
+from wtforms import StringField, DateTimeField, SubmitField, SelectMultipleField, IntegerField, TimeField
+from wtforms.widgets import ListWidget, CheckboxInput
 from wtforms.validators import DataRequired, Email
 from datetime import datetime, timedelta, time, date
 from dotenv import load_dotenv
@@ -22,9 +23,20 @@ class Configuracion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     dias_no_laborales = db.Column(db.String(200), default="[]")  # Almacena como JSON
     limite_turnos = db.Column(db.Integer, default=90)  # Límite en días para sacar turnos
-    horario_inicio = db.Column(db.Time, nullable=False, default="09:00:00")
-    horario_fin = db.Column(db.Time, nullable=False, default="17:00:00")
+    horario_inicio = db.Column(db.Time, nullable=False, default=time(9, 0))  # Cambiado a time
+    horario_fin = db.Column(db.Time, nullable=False, default=time(17, 0))  # Cambiado a time
     duracion_turno = db.Column(db.Integer, default=30)  # Minutos
+
+# Clase formulario para configuracion
+class ConfiguracionForm(FlaskForm):
+    dias_no_laborales = SelectMultipleField("Días no laborales", choices=[
+        ("0", "Lunes"), ("1", "Martes"), ("2", "Miércoles"),
+        ("3", "Jueves"), ("4", "Viernes"), ("5", "Sábado"), ("6", "Domingo")
+    ], widget=ListWidget(prefix_label=False), option_widget=CheckboxInput())
+    limite_turnos = IntegerField("Límite de turnos (días)", default=90)
+    horario_inicio = TimeField("Horario de inicio", default=time(9, 0))  # Cambiado a time para consistencia
+    horario_fin = TimeField("Horario de fin", default=time(17, 0))      # Cambiado a time para consistencia
+    submit = SubmitField("Guardar Configuración")
 
 # Funcion para generar turnos disponibles
 def generar_disponibilidades(configuracion):
@@ -42,8 +54,8 @@ def generar_disponibilidades(configuracion):
                     "hora": horario_actual
                 })
                 horario_actual = (datetime.combine(date.min, horario_actual) + timedelta(minutes=configuracion.duracion_turno)).time()
-            dia_actual += timedelta(days=1)
-        return horarios
+        dia_actual += timedelta(days=1)  # FIX: Cambiado de `return horarios` a continuar el bucle correctamente
+    return horarios
 
 # Clase para los turnos
 class Turno(db.Model):
@@ -82,6 +94,33 @@ def cancelar_turno(id):
     db.session.commit()
     flash("Turno cancelado exitosamente.", "success")
     return redirect(url_for("listar_turnos"))
+
+@app.route("/configuracion", methods=["GET", "POST"])
+def configuracion():
+    configuracion = Configuracion.query.first()
+    form = ConfiguracionForm(obj=configuracion)
+    if form.validate_on_submit():
+        configuracion.dias_no_laborales = str(form.dias_no_laborales.data)
+        configuracion.limite_turnos = form.limite_turnos.data
+        configuracion.horario_inicio = form.horario_inicio.data
+        configuracion.horario_fin = form.horario_fin.data
+        db.session.commit()
+        flash("Configuracion actualizada", "success")
+        return redirect(url_for("index"))
+    return render_template("configuracion.html", form=form)
+
+@app.route("/disponibilidades")
+def mostrar_disponibilidades():
+    configuracion = Configuracion.query.first()
+    if not configuracion:
+        flash("No se ha configurado el sistema aún.", "warning")
+        return redirect(url_for("index"))
+    
+    turnos_disponibles = generar_disponibilidades(configuracion)
+    turnos_reservados = [t.fecha_turno for t in Turno.query.all()]
+    turnos_finales = [t for t in turnos_disponibles if datetime.combine(t["fecha"], t["hora"]) not in turnos_reservados]
+
+    return render_template("disponibilidades.html", turnos=turnos_finales)
 
 @app.route("/nuevo-turno", methods=["GET", "POST"])
 def nuevo_turno():

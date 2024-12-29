@@ -1,5 +1,6 @@
+email-validator
 Flask
 Flask-SQLAlchemy
 Flask-WTF
 Flask-Mail
-email-validator
+python-dotenv

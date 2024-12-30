@@ -7,25 +7,22 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <ul>
-        <li>
-            <a href="/">Inicio</a>
-        </li>
-        <li>
-            <a href="/profesional/turnos">Turnos</a>
-        </li>
-        <li>
-            <a href="/cliente/nuevo-turno">Nuevo Turno</a>
-        </li>
-        <li>
-            <a href="/cliente/disponibilidades">Disponibilidades</a>
-        </li>
-        <li>
-            <a href="/profesional/configuracion">Configuración</a>
-        </li>
-    </ul>
     <h1>Bienvenido a Nutri-turnos</h1>
-    </ul>
+    <nav>
+        <ul>
+            {% if session.get('role') == 'cliente' %}
+            <li><a href="{{ url_for('cliente_disponibilidades') }}">Ver Disponibilidades</a></li>
+            <li><a href="{{ url_for('nuevo_turno') }}">Reservar Turno</a></li>
+            <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+            {% elif session.get('role') == 'profesional' %}
+                <li><a href="{{ url_for('profesional_turnos') }}">Ver Turnos</a></li>
+                <li><a href="{{ url_for('configuracion') }}">Configurar Horarios</a></li>
+                <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+            {% else %}
+                <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
+            {% endif %}
+        </ul>
+    </nav>
     <div>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}

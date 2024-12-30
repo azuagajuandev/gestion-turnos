@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h1>Iniciar Sesión</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.email.label }}<br>
+            {{ form.email(class="form-control") }}
+        </div>
+        <div>
+            {{ form.submit(class="btn btn-primary") }}
+        </div>
+    </form>
+
+{% endblock %}

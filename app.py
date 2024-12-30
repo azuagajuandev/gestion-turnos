@@ -1,6 +1,7 @@
-from flask import Flask, flash, render_template, request, redirect, url_for
+from flask import Flask, flash, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
+from functools import wraps
 from wtforms import StringField, DateTimeField, SubmitField, SelectMultipleField, IntegerField, TimeField, SelectField
 from wtforms.widgets import ListWidget, CheckboxInput
 from wtforms.validators import DataRequired, Email
@@ -38,6 +39,38 @@ class ConfiguracionForm(FlaskForm):
     horario_fin = TimeField("Horario de fin", default=time(17, 0))      # Cambiado a time para consistencia
     submit = SubmitField("Guardar Configuración")
 
+# Formulario de inicio de sesión
+class LoginForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    submit = SubmitField("Iniciar Sesión")
+
+# Clase para los turnos
+class Turno(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre_cliente = db.Column(db.String(100), nullable=False)
+    email_cliente = db.Column(db.String(120), nullable=False)
+    fecha_turno = db.Column(db.DateTime, nullable=False)
+    pagado = db.Column(db.Boolean, nullable=False, default=False)
+
+    def __repr__(self):
+        return f"<turno {self.nombre_cliente} - {self.fecha_turno}>"
+
+# Formulario agregar turno
+class TurnoForm(FlaskForm):
+    nombre_cliente = StringField("Nombre del Cliente", validators=[DataRequired()])
+    email_cliente = StringField("Email del Cliente", validators=[DataRequired(), Email()])
+    fecha_turno = SelectField("Selecciona un turno disponible", validators=[DataRequired()])
+    submit = SubmitField("Reservar Turno")
+
+class Usuario(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    rol = db.Column(db.String(20), nullable=False) # "cliente" o "profesional"
+
+    def __repr__(self):
+        return f"<Usuario {self.nombre} ({self.rol})>"
+
 # Funcion para generar turnos disponibles
 def generar_disponibilidades(configuracion):
     hoy = date.today()
@@ -60,23 +93,17 @@ def generar_disponibilidades(configuracion):
         dia_actual += timedelta(days=1)  # FIX: Cambiado de `return horarios` a continuar el bucle correctamente
     return horarios
 
-# Clase para los turnos
-class Turno(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nombre_cliente = db.Column(db.String(100), nullable=False)
-    email_cliente = db.Column(db.String(120), nullable=False)
-    fecha_turno = db.Column(db.DateTime, nullable=False)
-    pagado = db.Column(db.Boolean, nullable=False, default=False)
-
-    def __repr__(self):
-        return f"<turno {self.nombre_cliente} - {self.fecha_turno}>"
-
-# Formulario agregar turno
-class TurnoForm(FlaskForm):
-    nombre_cliente = StringField("Nombre del Cliente", validators=[DataRequired()])
-    email_cliente = StringField("Email del Cliente", validators=[DataRequired(), Email()])
-    fecha_turno = SelectField("Selecciona un turno disponible", validators=[DataRequired()])
-    submit = SubmitField("Reservar Turno")
+# Decorador para verificar el rol del usuario antes de acceder a ciertas rutas:
+def requiere_rol(role):
+    def decorador(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if session.get("role") != role:
+                flash("Acceso no autorizado", "danger")
+                return redirect(url_for("index"))
+            return func(*args, **kwargs)
+        return wrapper
+    return decorador
 
 @app.route("/")
 def index():
@@ -90,38 +117,17 @@ def cancelar_turno(id):
     # Bloquear cancelación si faltan menos de 48 horas
     if tiempo_restante < timedelta(hours=48):
         flash("No puedes cancelar este turno porque faltan menos de 48 horas.", "danger")
-        return redirect(url_for("listar_turnos"))
+        return redirect(url_for("profesional_turnos"))
     
     # Si faltan más de 48 horas, se permite cancelar
     db.session.delete(turno)
     db.session.commit()
     flash("Turno cancelado exitosamente.", "success")
-    return redirect(url_for("listar_turnos"))
-
-@app.route("/profesional/configuracion", methods=["GET", "POST"])
-def configuracion():
-    configuracion = Configuracion.query.first()
-
-    # Si no existe una configuracion, crear una nueva con valores predeterminados
-    if not configuracion:
-        configuracion = Configuracion()
-        db.session.add(configuracion)
-        db.session.commit
-
-    form = ConfiguracionForm(obj=configuracion)
-
-    if form.validate_on_submit():
-        configuracion.dias_no_laborales = str(form.dias_no_laborales.data)
-        configuracion.limite_turnos = form.limite_turnos.data
-        configuracion.horario_inicio = form.horario_inicio.data
-        configuracion.horario_fin = form.horario_fin.data
-        db.session.commit()
-        flash("Configuracion actualizada", "success")
-        return redirect(url_for("index"))
-    return render_template("configuracion.html", form=form)
+    return redirect(url_for("profesional_turnos"))
 
 @app.route("/cliente/disponibilidades")
-def mostrar_disponibilidades():
+@requiere_rol("cliente")
+def cliente_disponibilidades():
     configuracion = Configuracion.query.first()
     if not configuracion:
         flash("No se ha configurado el sistema aún.", "warning")
@@ -134,6 +140,7 @@ def mostrar_disponibilidades():
     return render_template("disponibilidades.html", turnos=turnos_finales)
 
 @app.route("/cliente/nuevo-turno", methods=["GET", "POST"])
+@requiere_rol("cliente")
 def nuevo_turno():
     configuracion = Configuracion.query.first()
     if not configuracion:
@@ -171,11 +178,61 @@ def nuevo_turno():
         db.session.add(nuevo_turno)
         db.session.commit()
         flash("Turno reservado exitosamente", "success")
-        return redirect(url_for("listar_turnos"))
+        return redirect(url_for("cliente_disponibilidades"))
     return render_template("nuevo_turno.html", form=form)
 
+# Inicio de sesión
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        usuario = Usuario.query.filter_by(email=form.email.data).first()
+        if usuario:
+            session["user_id"] = usuario.id
+            session["role"] = usuario.rol
+            if usuario.rol == "cliente":
+                flash("Sesión iniciada como Cliente", "success")
+                return redirect(url_for("cliente_disponibilidades"))
+            elif usuario.rol == "profesional":
+                flash("Sesión iniciada como Profesional", "success")
+                return redirect(url_for("profesional_turnos"))
+        else:
+            flash("Usuario no encontrado. Verifica el email ingresado.", "danger")
+    return render_template("login.html", form=form)
+
+# Cerrar sesión
+@app.route("/logout")
+def logout():
+    session.pop("role", None)
+    flash("Sesión cerrada", "success")
+    return redirect(url_for("index"))
+
+@app.route("/profesional/configuracion", methods=["GET", "POST"])
+@requiere_rol("profesional")
+def configuracion():
+    configuracion = Configuracion.query.first()
+
+    # Si no existe una configuracion, crear una nueva con valores predeterminados
+    if not configuracion:
+        configuracion = Configuracion()
+        db.session.add(configuracion)
+        db.session.commit
+
+    form = ConfiguracionForm(obj=configuracion)
+
+    if form.validate_on_submit():
+        configuracion.dias_no_laborales = str(form.dias_no_laborales.data)
+        configuracion.limite_turnos = form.limite_turnos.data
+        configuracion.horario_inicio = form.horario_inicio.data
+        configuracion.horario_fin = form.horario_fin.data
+        db.session.commit()
+        flash("Configuracion actualizada", "success")
+        return redirect(url_for("index"))
+    return render_template("configuracion.html", form=form)
+
 @app.route("/profesional/turnos")
-def listar_turnos():
+@requiere_rol("profesional")
+def profesional_turnos():
     turnos = Turno.query.all()
     return render_template("turnos.html", turnos=turnos)
 

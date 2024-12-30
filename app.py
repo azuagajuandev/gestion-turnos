@@ -98,7 +98,7 @@ def cancelar_turno(id):
     flash("Turno cancelado exitosamente.", "success")
     return redirect(url_for("listar_turnos"))
 
-@app.route("/configuracion", methods=["GET", "POST"])
+@app.route("/profesional/configuracion", methods=["GET", "POST"])
 def configuracion():
     configuracion = Configuracion.query.first()
 
@@ -120,7 +120,7 @@ def configuracion():
         return redirect(url_for("index"))
     return render_template("configuracion.html", form=form)
 
-@app.route("/disponibilidades")
+@app.route("/cliente/disponibilidades")
 def mostrar_disponibilidades():
     configuracion = Configuracion.query.first()
     if not configuracion:
@@ -133,7 +133,7 @@ def mostrar_disponibilidades():
 
     return render_template("disponibilidades.html", turnos=turnos_finales)
 
-@app.route("/nuevo-turno", methods=["GET", "POST"])
+@app.route("/cliente/nuevo-turno", methods=["GET", "POST"])
 def nuevo_turno():
     configuracion = Configuracion.query.first()
     if not configuracion:
@@ -174,7 +174,7 @@ def nuevo_turno():
         return redirect(url_for("listar_turnos"))
     return render_template("nuevo_turno.html", form=form)
 
-@app.route("/turnos")
+@app.route("/profesional/turnos")
 def listar_turnos():
     turnos = Turno.query.all()
     return render_template("turnos.html", turnos=turnos)

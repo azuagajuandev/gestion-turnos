@@ -3,19 +3,6 @@
 {% block content %}
 
     <h2>Turnos</h2>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <div>
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-            {{ message }}
-            </div>
-        {% endfor %}
-        </div>
-    {% endif %}
-    {% endwith %}
-
     <table>
         <thead>
             <tr>

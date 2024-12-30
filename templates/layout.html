@@ -7,9 +7,40 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
+    <ul>
+        <li>
+            <a href="/">Inicio</a>
+        </li>
+        <li>
+            <a href="/turnos">Turnos</a>
+        </li>
+        <li>
+            <a href="/nuevo-turno">Nuevo Turno</a>
+        </li>
+        <li>
+            <a href="/disponibilidades">Disponibilidades</a>
+        </li>
+        <li>
+            <a href="/configuracion">Configuración</a>
+        </li>
+    </ul>
     <h1>Bienvenido a Nutri-turnos</h1>
+    </ul>
     <div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div>
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message|safe }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
+
     </div>
 </body>
 </html>

@@ -92,13 +92,20 @@ def generar_disponibilidades(configuracion):
     return horarios
 
 # Decorador para verificar el rol del usuario antes de acceder a ciertas rutas:
-def requiere_rol(role):
+def requiere_rol(roles):
     def decorador(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if session.get("role") != role:
+            usuario_rol = session.get("role")
+            # Si roles es una lista, verifica si el usuario tiene un rol permitido
+            if isinstance(roles, list):
+                if usuario_rol not in roles:
+                    flash("Acceso no autorizado", "danger")
+                    return redirect(url_for("login"))
+            # Si roles es un string, compara directamente
+            elif usuario_rol != roles:
                 flash("Acceso no autorizado", "danger")
-                return redirect(url_for("index"))
+                return redirect(url_for("login"))
             return func(*args, **kwargs)
         return wrapper
     return decorador
@@ -108,20 +115,27 @@ def index():
     return render_template("index.html")
 
 @app.route("/cancelar-turno/<int:id>", methods=["POST"])
+@requiere_rol(["cliente", "profesional"])
 def cancelar_turno(id):
     turno = Turno.query.get_or_404(id)
     tiempo_restante = turno.fecha_turno - datetime.now()
     
-    # Bloquear cancelación si faltan menos de 48 horas
-    if tiempo_restante < timedelta(hours=48):
-        flash("No puedes cancelar este turno porque faltan menos de 48 horas.", "danger")
-        return redirect(url_for("profesional_turnos"))
+    # Si es cliente bloquear cancelación si faltan menos de 48 horas
+    if session.get("role") == "cliente":
+        if tiempo_restante < timedelta(hours=48):
+            flash("No puedes cancelar este turno porque faltan menos de 48 horas.", "danger")
+            return redirect(url_for("cliente_turnos"))
     
-    # Si faltan más de 48 horas, se permite cancelar
+    # Si faltan más de 48 horas o es profesional, se permite cancelar
     db.session.delete(turno)
     db.session.commit()
     flash("Turno cancelado exitosamente.", "success")
-    return redirect(url_for("profesional_turnos"))
+
+    # Redirige según el rol del usuario
+    if session.get("role") == "cliente":
+        return redirect(url_for("cliente_turnos"))
+    if session.get("role") == "profesional":
+        return redirect(url_for("profesional_turnos"))
 
 @app.route("/cliente/disponibilidades")
 @requiere_rol("cliente")

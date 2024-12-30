@@ -19,7 +19,7 @@
                     <th>{{ turno.fecha_turno }}</th>
                     <th>{{ "Pagado" if turno.pagado else "Pendiente" }}</th>
                 </tr>
-                {% endif %}
+                {% endfor %}
             </tbody>
         </table>
     {% else %}

@@ -57,8 +57,6 @@ class Turno(db.Model):
 
 # Formulario agregar turno
 class TurnoForm(FlaskForm):
-    nombre_cliente = StringField("Nombre del Cliente", validators=[DataRequired()])
-    email_cliente = StringField("Email del Cliente", validators=[DataRequired(), Email()])
     fecha_turno = SelectField("Selecciona un turno disponible", validators=[DataRequired()])
     submit = SubmitField("Reservar Turno")
 
@@ -184,14 +182,14 @@ def nuevo_turno():
 
         # Crear nuevo turno
         nuevo_turno = Turno(
-            nombre_cliente=form.nombre_cliente.data,
-            email_cliente=form.email_cliente.data,
-            fecha_turno=datetime.strptime(form.fecha_turno.data, "%Y-%m-%d %H:%M")
+            nombre_cliente="Cliente autenticado",
+            email_cliente=session.get("user_email"),
+            fecha_turno=fecha_turno
         )
         db.session.add(nuevo_turno)
         db.session.commit()
         flash("Turno reservado exitosamente", "success")
-        return redirect(url_for("cliente_disponibilidades"))
+        return redirect(url_for("cliente_turnos"))
     return render_template("nuevo_turno.html", form=form)
 
 # Inicio de sesión
@@ -206,7 +204,7 @@ def login():
             session["role"] = usuario.rol
             if usuario.rol == "cliente":
                 flash("Sesión iniciada como Cliente", "success")
-                return redirect(url_for("cliente_disponibilidades"))
+                return redirect(url_for("cliente_turnos"))
             elif usuario.rol == "profesional":
                 flash("Sesión iniciada como Profesional", "success")
                 return redirect(url_for("profesional_turnos"))

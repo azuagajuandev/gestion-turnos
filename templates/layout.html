@@ -11,6 +11,7 @@
     <nav>
         <ul>
             {% if session.get('role') == 'cliente' %}
+            <li><a href="{{ url_for('cliente_turnos') }}">Mis turnos</a></li>
             <li><a href="{{ url_for('cliente_disponibilidades') }}">Ver Disponibilidades</a></li>
             <li><a href="{{ url_for('nuevo_turno') }}">Reservar Turno</a></li>
             <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>

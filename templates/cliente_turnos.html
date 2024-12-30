@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h2>Mis Turnos</h2>
+    {% if turnos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Estado de pago</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for turno in turnos %}
+                <tr>
+                    <th>{{ turno.id }}</th>
+                    <th>{{ turno.fecha_turno }}</th>
+                    <th>{{ "Pagado" if turno.pagado else "Pendiente" }}</th>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No tienes turnos reservados.</p>
+    {% endif %}
+
+{% endblock %}

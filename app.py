@@ -139,6 +139,19 @@ def cliente_disponibilidades():
 
     return render_template("disponibilidades.html", turnos=turnos_finales)
 
+@app.route("/cliente/mis-turnos")
+@requiere_rol("cliente")
+def cliente_turnos():
+    # Obtiene el email del cliente autenticado
+    email_cliente = session.get("user_email")
+    if not email_cliente:
+        flash("No se pude identificar al cliente", "danger")
+        return redirect(url_for("login"))
+    
+    # Filtrar los turnos reservados por este cliente
+    turnos = Turno.query.filter_by(email_cliente=email_cliente).all()
+    return render_template("cliente_turnos.html", turnos=turnos)
+
 @app.route("/cliente/nuevo-turno", methods=["GET", "POST"])
 @requiere_rol("cliente")
 def nuevo_turno():
@@ -189,6 +202,7 @@ def login():
         usuario = Usuario.query.filter_by(email=form.email.data).first()
         if usuario:
             session["user_id"] = usuario.id
+            session["user_email"] = usuario.email
             session["role"] = usuario.rol
             if usuario.rol == "cliente":
                 flash("Sesión iniciada como Cliente", "success")

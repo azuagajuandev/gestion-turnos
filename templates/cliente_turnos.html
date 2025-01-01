@@ -1,35 +1,35 @@
 {% extends "layout.html" %}
 
 {% block content %}
-
-    <h2>Mis Turnos</h2>
+<div class="container mt-5">
+    <h2 class="text-center">Mis Turnos</h2>
     {% if turnos %}
-        <table>
-            <thead>
+        <table class="table table-striped table-hover mt-4">
+            <thead class="table-dark">
                 <tr>
                     <th>ID</th>
                     <th>Fecha</th>
-                    <th>Estado de pago</th>
+                    <th>Estado de Pago</th>
+                    <th>Acción</th>
                 </tr>
             </thead>
             <tbody>
                 {% for turno in turnos %}
                 <tr>
-                    <th>{{ turno.id }}</th>
-                    <th>{{ turno.fecha_turno }}</th>
-                    <th>{{ "Pagado" if turno.pagado else "Pendiente" }}</th>
-                    <th>
+                    <td>{{ turno.id }}</td>
+                    <td>{{ turno.fecha_turno }}</td>
+                    <td>{{ "Pagado" if turno.pagado else "Pendiente" }}</td>
+                    <td>
                         <form method="POST" action="{{ url_for('cancelar_turno', id=turno.id) }}">
                             <button type="submit" class="btn btn-danger">Cancelar</button>
                         </form>
-                    </th>
+                    </td>
                 </tr>
-                
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>No tienes turnos reservados.</p>
+        <p class="text-center text-muted mt-4">No tienes turnos reservados.</p>
     {% endif %}
-
+</div>
 {% endblock %}

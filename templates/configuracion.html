@@ -1,15 +1,29 @@
 {% extends "layout.html" %}
 
 {% block content %}
-
-    <h2>Configuraciones</h2>
-    <form method="post">
+<div class="container mt-5">
+    <h2 class="text-center">Configuraciones</h2>
+    <form method="POST" class="mt-4">
         {{ form.hidden_tag() }}
-        <div>{{ form.dias_no_laborales.label }}<br>{{ form.dias_no_laborales }}</div>
-        <div>{{ form.limite_turnos.label }}<br>{{ form.limite_turnos }}</div>
-        <div>{{ form.horario_inicio.label }}<br>{{ form.horario_inicio }}</div>
-        <div>{{ form.horario_fin.label }}<br>{{ form.horario_fin }}</div>
-        <div>{{ form.submit(class="btn btn-primary") }}</div>
+        <div class="mb-3">
+            <label for="diasNoLaborales" class="form-label">{{ form.dias_no_laborales.label }}</label>
+            {{ form.dias_no_laborales(class="form-control", id="diasNoLaborales") }}
+        </div>
+        <div class="mb-3">
+            <label for="limiteTurnos" class="form-label">{{ form.limite_turnos.label }}</label>
+            {{ form.limite_turnos(class="form-control", id="limiteTurnos") }}
+        </div>
+        <div class="mb-3">
+            <label for="horarioInicio" class="form-label">{{ form.horario_inicio.label }}</label>
+            {{ form.horario_inicio(class="form-control", id="horarioInicio") }}
+        </div>
+        <div class="mb-3">
+            <label for="horarioFin" class="form-label">{{ form.horario_fin.label }}</label>
+            {{ form.horario_fin(class="form-control", id="horarioFin") }}
+        </div>
+        <div class="text-center">
+            {{ form.submit(class="btn btn-primary w-100") }}
+        </div>
     </form>
-
+</div>
 {% endblock %}

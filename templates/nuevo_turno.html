@@ -3,15 +3,15 @@
 {% block content %}
 
     <h2>Reserva de Turnos</h2>
-    <form method="POST">
-        {{ form.hidden_tag() }}
-        <div>
-            {{ form.fecha_turno.label }}
-            {{ form.fecha_turno(class="form-control") }}
-        </div>
-        <div>
-            {{ form.submit(class="btn btn-primary") }}
-        </div>
-    </form>
+    <div class="container mt-2">
+        <form method="POST" class="mt-4">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                <label for="fechaTurno" class="form-label">{{ form.fecha_turno.label }}</label>
+                {{ form.fecha_turno(class="form-control", id="fechaTurno") }}
+            </div>
+            <button type="submit" class="btn btn-primary">Reservar Turno</button>
+        </form>
+    </div>
 
 {% endblock %}

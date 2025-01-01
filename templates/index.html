@@ -1,10 +1,38 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h1>Bienvenido</h1>
-    <div>
-        <a href="/login">
-            <button>Inicio de Sesión</button>
-        </a>
-    </div>
+<div class="container mt-5">
+    <h1 class="text-center">Bienvenido a Nutri-turnos</h1>
+    {% if session.get('role') == 'cliente' %}
+        <p class="text-center mt-4">Hola, cliente. Aquí tienes acceso rápido a tus opciones:</p>
+        <div class="row justify-content-center mt-3">
+            <div class="col-12 col-md-4 mb-2">
+                <a href="{{ url_for('cliente_turnos') }}" class="btn btn-primary w-100">Mis Turnos</a>
+            </div>
+            <div class="col-12 col-md-4 mb-2">
+                <a href="{{ url_for('cliente_disponibilidades') }}" class="btn btn-secondary w-100">Ver Disponibilidades</a>
+            </div>
+            <div class="col-12 col-md-4 mb-2">
+                <a href="{{ url_for('nuevo_turno') }}" class="btn btn-success w-100">Reservar Turno</a>
+            </div>
+        </div>
+    {% elif session.get('role') == 'profesional' %}
+        <p class="text-center mt-4">Hola, profesional. Aquí tienes acceso rápido a tus opciones:</p>
+        <div class="row justify-content-center mt-3">
+            <div class="col-12 col-md-4 mb-2">
+                <a href="{{ url_for('profesional_turnos') }}" class="btn btn-primary w-100">Ver Turnos</a>
+            </div>
+            <div class="col-12 col-md-4 mb-2">
+                <a href="{{ url_for('configuracion') }}" class="btn btn-secondary w-100">Configurar Horarios</a>
+            </div>
+        </div>
+    {% else %}
+        <p class="text-center mt-4">Por favor, inicia sesión para acceder a tus opciones:</p>
+        <div class="row justify-content-center mt-3">
+            <div class="col-12 col-md-4 mb-2">
+                <a href="{{ url_for('login') }}" class="btn btn-primary w-100">Inicio de Sesión</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

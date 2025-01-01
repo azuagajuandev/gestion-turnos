@@ -1,12 +1,12 @@
 {% extends "layout.html" %}
 
 {% block content %}
-
-    <h2>Turnos Disponibilidades</h2>
-    <ul>
+<div class="container mt-5">
+    <h2 class="text-center">Turnos Disponibles</h2>
+    <ul class="list-group mt-4">
         {% for turno in turnos %}
-        <li>{{ turno.fecha }} - {{ turno.hora }}</li>
+        <li class="list-group-item">{{ turno.fecha }} - {{ turno.hora }}</li>
         {% endfor %}
     </ul>
-
+</div>
 {% endblock %}
